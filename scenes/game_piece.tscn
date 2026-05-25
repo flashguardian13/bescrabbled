@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://cemcf5xhw8x12"]
+
+[ext_resource type="Texture2D" uid="uid://b4so0llx6q8aw" path="res://assets/art/capsule.png" id="1_jui6c"]
+[ext_resource type="FontFile" uid="uid://dvywyprb5tl7l" path="res://assets/fonts/OpenDyslexicMono-Regular.otf" id="2_440e6"]
+[ext_resource type="Script" uid="uid://ceru445mxqygx" path="res://scenes/game_piece.gd" id="2_trl24"]
+[ext_resource type="Texture2D" uid="uid://cj2wrjyhvyy4u" path="res://assets/art/pin_light.png" id="4_trl24"]
+
+[node name="GamePiece" type="Sprite2D" unique_id=1692476978]
+texture = ExtResource("1_jui6c")
+script = ExtResource("2_trl24")
+
+[node name="Label" type="Label" parent="." unique_id=18431511]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -57.0
+offset_top = -57.0
+offset_right = -7.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("2_440e6")
+theme_override_font_sizes/font_size = 32
+text = "E"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PointLight2D" type="PointLight2D" parent="." unique_id=1710870481]
+enabled = false
+energy = 2.0
+texture = ExtResource("4_trl24")

@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="bescrabbled"
+run/main_scene="uid://3p5uqe2xvees"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Words="*uid://dcfsj4yj6lsl0"
 
 [physics]
 
