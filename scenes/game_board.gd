@@ -29,7 +29,7 @@ var board_width:int = 0
 var board_height:int = 0
 var game_pieces:Array = []
 
-var available_letters:Array = ["E", "A", "O", "I", "T", "S", "R"]
+var available_letters:Array = ["A", "E", "I", "O", "R", "S", "T"]
 
 # ================================================================
 # Game Board and Piece Management
@@ -144,4 +144,3 @@ func check_for_words() -> void:
 				var word:String = row.substr(start_x, len)
 				if Words.is_word(word):
 					print("Found word '%s' between %s and %s!" % [word, Vector2i(start_x, y), Vector2i(start_x + len - 1, y)])
-	# THIS WORKS BUT IT IS REALLY SLOW!
