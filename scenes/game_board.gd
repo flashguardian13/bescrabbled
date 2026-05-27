@@ -5,8 +5,6 @@ class_name GameBoard
 const TILE_SOURCE_ID:int = 0
 const TILE_ATLAS_COORDS:Vector2i = Vector2i(0, 0)
 
-const MINIMUM_WORD_LENGTH:int = 3
-
 @onready var game_piece_scene:PackedScene = preload("res://scenes/game_piece.tscn")
 
 @onready var camera:Camera2D = $Camera2D
@@ -170,9 +168,9 @@ func _check_for_words_in_row(y:int) -> Array[Dictionary]:
 		line += game_pieces[map_to_index(Vector2i(x, y))].letter
 	# Look for words. Start big, then look small
 	# For board width 10 and word length 3, this is (0..7)
-	for start in line.length() - (MINIMUM_WORD_LENGTH - 1):
+	for start in line.length() - (Words.MINIMUM_WORD_LENGTH - 1):
 		# For board width 10 and word length 3, this goes from (10..3) to (3..3)
-		for word_length in range(line.length() - start, (MINIMUM_WORD_LENGTH - 1), -1):
+		for word_length in range(line.length() - start, (Words.MINIMUM_WORD_LENGTH - 1), -1):
 			var row_slice:String = line.substr(start, word_length)
 			# Ignore if not a word.
 			if !Words.is_word(row_slice):
@@ -200,8 +198,8 @@ func _check_for_words_in_column(x:int) -> Array[Dictionary]:
 	for y in board_height:
 		line += game_pieces[map_to_index(Vector2i(x, y))].letter
 	# Look for words. Start big, then look small
-	for start in line.length() - (MINIMUM_WORD_LENGTH - 1):
-		for word_length in range(line.length() - start, (MINIMUM_WORD_LENGTH - 1), -1):
+	for start in line.length() - (Words.MINIMUM_WORD_LENGTH - 1):
+		for word_length in range(line.length() - start, (Words.MINIMUM_WORD_LENGTH - 1), -1):
 			var row_slice:String = line.substr(start, word_length)
 			# Ignore if not a word.
 			if !Words.is_word(row_slice):
