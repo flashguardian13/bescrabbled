@@ -1,6 +1,6 @@
 extends Node
 
-const WORDS_PATH:String = "res://data/scrabble_words.txt"
+const WORDS_PATH:String = "res://data/12dicts-6.0.2/International/3of6game.txt"
 
 var word_tree:Dictionary[StringName, Array]
 

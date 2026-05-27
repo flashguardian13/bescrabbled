@@ -5,6 +5,8 @@ class_name GameBoard
 const TILE_SOURCE_ID:int = 0
 const TILE_ATLAS_COORDS:Vector2i = Vector2i(0, 0)
 
+const MINIMUM_WORD_LENGTH:int = 3
+
 @onready var game_piece_scene:PackedScene = preload("res://scenes/game_piece.tscn")
 
 @onready var camera:Camera2D = $Camera2D
@@ -30,6 +32,11 @@ var board_height:int = 0
 var game_pieces:Array = []
 
 var available_letters:Array = ["A", "E", "I", "O", "R", "S", "T"]
+
+# ================================================================
+
+func _ready() -> void:
+	pass
 
 # ================================================================
 # Game Board and Piece Management
@@ -102,16 +109,22 @@ func _on_mouse_up() -> void:
 	mouse_up_map_position = Vector2i.MIN
 
 func _on_mouse_click(map_position:Vector2i) -> void:
-	print("Mouse clicked at %s" % [mouse_up_map_position])
+	# Select if none selected
+	if selected_piece_map_position == Vector2i.MIN:
+		selected_piece_map_position = map_position
+		return
+	# Clicking again deselects
 	if selected_piece_map_position == map_position:
 		selected_piece_map_position = Vector2i.MIN
-	else:
-		if selected_piece_map_position == Vector2i.MIN:
-			selected_piece_map_position = map_position
-		else:
-			var from_pos:Vector2i = selected_piece_map_position
-			selected_piece_map_position = Vector2i.MIN
-			swap(from_pos, map_position)
+		return
+	# Change selection if clicked cell is diagonal or not touching.
+	if (map_position - selected_piece_map_position).length_squared() != 1:
+		selected_piece_map_position = map_position
+		return
+	# Swap!
+	var from_pos:Vector2i = selected_piece_map_position
+	selected_piece_map_position = Vector2i.MIN
+	swap(from_pos, map_position)
 
 func _on_mouse_drag(start_map_position:Vector2i, end_map_position:Vector2i) -> void:
 	# Treat a zero-distance drag as a click.
@@ -121,6 +134,7 @@ func _on_mouse_drag(start_map_position:Vector2i, end_map_position:Vector2i) -> v
 	# Ignore drags to cells that are diagonal or not touching.
 	if (end_map_position - start_map_position).length_squared() != 1:
 		return
+	# Swap!
 	selected_piece_map_position = Vector2i.MIN
 	swap(start_map_position, end_map_position)
 
@@ -134,13 +148,79 @@ func swap(start_map_position:Vector2i, end_map_position:Vector2i) -> void:
 	game_pieces[end_index] = buffer
 	check_for_words()
 
+# Checks for word matches horizontally and vertically.
+# A word that is fully contained by another (larger) word will be ignored.
+# Words that partially overlap will both count.
 func check_for_words() -> void:
+	var horizontal_words:Array[Dictionary] = []
 	for y in board_height:
-		var row:String = ""
-		for x in board_width:
-			row += game_pieces[map_to_index(Vector2i(x, y))].letter
-		for start_x in board_width - 2:
-			for len in range(board_width - start_x, 2, -1):
-				var word:String = row.substr(start_x, len)
-				if Words.is_word(word):
-					print("Found word '%s' between %s and %s!" % [word, Vector2i(start_x, y), Vector2i(start_x + len - 1, y)])
+		horizontal_words.append_array(_check_for_words_in_row(y))
+	var vertical_words:Array[Dictionary] = []
+	for x in board_width:
+		vertical_words.append_array(_check_for_words_in_column(x))
+	if horizontal_words.is_empty() && vertical_words.is_empty():
+		return
+	print("Found %s words." % [horizontal_words.size() + vertical_words.size()])
+
+func _check_for_words_in_row(y:int) -> Array[Dictionary]:
+	var words:Array[Dictionary] = []
+	# Capture the entire line's contents as a string. We will examine substrings of this string.
+	var line:String = ""
+	for x in board_width:
+		line += game_pieces[map_to_index(Vector2i(x, y))].letter
+	# Look for words. Start big, then look small
+	# For board width 10 and word length 3, this is (0..7)
+	for start in line.length() - (MINIMUM_WORD_LENGTH - 1):
+		# For board width 10 and word length 3, this goes from (10..3) to (3..3)
+		for word_length in range(line.length() - start, (MINIMUM_WORD_LENGTH - 1), -1):
+			var row_slice:String = line.substr(start, word_length)
+			# Ignore if not a word.
+			if !Words.is_word(row_slice):
+				continue
+			# Ignore if word is contained within an existing word.
+			var containing_index:int = words.find_custom(
+				func(it): return range_contains_range(it[&"start"].x, it[&"length"], start, word_length)
+			)
+			if containing_index >= 0:
+				continue
+			# New word found!
+			print("Found word '%s' between %s and %s!" % [
+				row_slice, Vector2i(start, y), Vector2i(start + word_length - 1, y)
+			])
+			words.push_back({
+				&"word": row_slice, &"start": Vector2i(start, y), &"length": word_length
+			})
+			break
+	return words
+
+func _check_for_words_in_column(x:int) -> Array[Dictionary]:
+	var words:Array[Dictionary] = []
+	# Capture the entire line's contents as a string. We will examine substrings of this string.
+	var line:String = ""
+	for y in board_height:
+		line += game_pieces[map_to_index(Vector2i(x, y))].letter
+	# Look for words. Start big, then look small
+	for start in line.length() - (MINIMUM_WORD_LENGTH - 1):
+		for word_length in range(line.length() - start, (MINIMUM_WORD_LENGTH - 1), -1):
+			var row_slice:String = line.substr(start, word_length)
+			# Ignore if not a word.
+			if !Words.is_word(row_slice):
+				continue
+			# Ignore if word is contained within an existing word.
+			var containing_index:int = words.find_custom(
+				func(it): return range_contains_range(it[&"start"].y, it[&"length"], start, word_length)
+			)
+			if containing_index >= 0:
+				continue
+			# New word found!
+			print("Found word '%s' between %s and %s!" % [
+				row_slice, Vector2i(x, start), Vector2i(x, start + word_length - 1)
+			])
+			words.push_back({
+				&"word": row_slice, &"start": Vector2i(x, start), &"length": word_length
+			})
+			break
+	return words
+
+func range_contains_range(a0:int, al:int, b0:int, bl:int) -> bool:
+	return a0 <= b0 && (b0 + bl) <= (a0 + al)
